@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="giaodien.css"/>
+  <title>Movies Database</title>
+</head>
+<body>
+  <h1>Movies Database</h1>
+  <h2>Total Movies: <span id="movieCount"></span></h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Ảnh</th>
+        <th>Tên</th>
+        <th>Năm</th>
+        <th>Mô tả</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody id="moviesTableBody"></tbody>
+  </table>
+  <form id="addMovieForm" style="display: none;">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name"><br><br>
+    <label for="year">Year:</label>
+    <input type="number" id="year" name="year"><br><br>
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description" rows="4" cols="50"></textarea><br><br>
+    <label for="image">Image:</label>
+    <input type="file" id="image" name="image"><br><br> 
+    <button type="submit">Add Movie</button>
+  </form>
+  <button id="addMovieButton" style="cursor: pointer;">Add Movie</button>
+  <script>
+    async function updateMovieCount() {
+    try {
+      const response = await fetch('/movies/count');
+      const data = await response.json();
+      const count = data.count;
+      document.getElementById('movieCount').innerText = count;
+    } catch (error) {
+      console.error('Error updating movie count:', error);
+    }
+  }
+  async function updateMovieTable() {
+  try {
+    const moviesTableBody = document.getElementById('moviesTableBody');
+    moviesTableBody.innerHTML = '';
+
+    const response = await fetch('/movies');
+    const movies = await response.json();
+
+    movies.forEach(movie => {
+      const row = moviesTableBody.insertRow();
+
+      const imageCell = row.insertCell();
+      const img = document.createElement('img');
+      img.src = 'http://localhost:8080' + movie.imageUrl;
+      img.alt = movie.name;
+      img.width = 100;
+      imageCell.appendChild(img);
+
+      const nameCell = row.insertCell();
+      nameCell.textContent = movie.name;
+
+      const yearCell = row.insertCell();
+      yearCell.textContent = movie.year;
+
+      const descriptionCell = row.insertCell();
+      descriptionCell.textContent = movie.description;
+
+      const actionsCell = row.insertCell();
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.classList.add('movie-delete-button');
+      deleteButton.addEventListener('click', () => {
+        deleteMovie(movie._id);
+      });
+      actionsCell.appendChild(deleteButton);
+
+      const editButton = document.createElement('button');
+      editButton.textContent = 'Edit';
+      editButton.classList.add('movie-edit-button');
+      editButton.addEventListener('click', () => {
+        const newName = prompt('Enter new name:', movie.name);
+        const newYear = prompt('Enter new year:', movie.year);
+        const newDescription = prompt('Enter new description:', movie.description);
+        const newImageInput = document.createElement('input');
+
+        newImageInput.type = 'file';
+        newImageInput.accept = 'image/*';
+        newImageInput.addEventListener('change', async (event) => {
+          const selectedImage = event.target.files[0];
+          const formData = new FormData();
+
+          formData.append('name', newName);
+          formData.append('year', newYear);
+          formData.append('description', newDescription);
+          formData.append('image', selectedImage);
+
+          try {
+            const response = await fetch(`/movies/${movie._id}`, {
+              method: 'PUT',
+              body: formData,
+            });
+
+            const result = await response.json();
+            console.log(result);
+            updateMovieTable();
+          } catch (error) {
+            console.error(error);
+          }
+        });
+        newImageInput.click();
+      });
+      actionsCell.appendChild(editButton);
+      row.appendChild(actionsCell);
+    });
+    await updateMovieCount(); 
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function deleteMovie(movieId) {
+  try {
+    const response = await fetch(`/movies/${movieId}`, {
+      method: 'DELETE',
+    });
+    const result = await response.text();
+    console.log(result);
+    await updateMovieTable();
+  } catch (error) {
+    console.error(error);
+  }
+}
+document.getElementById('addMovieButton').addEventListener('click', function() {
+      const addMovieForm = document.getElementById('addMovieForm');
+      if (addMovieForm.style.display === 'none' || addMovieForm.style.display === '') {
+        addMovieForm.style.display = 'block'; 
+        document.getElementById('addMovieButton').style.display = 'none'; 
+      } else {
+        addMovieForm.style.display = 'none'; 
+      }
+    });
+document.getElementById('addMovieForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const name = document.getElementById('name').value;
+  const year = document.getElementById('year').value;
+  const description = document.getElementById('description').value;
+  const image = document.getElementById('image').files[0];
+
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('year', year);
+  formData.append('description', description);
+  formData.append('image', image);
+
+  try {
+    const response = await fetch('/movies', {
+      method: 'POST',
+      body: formData,
+    });
+    const result = await response.json();
+    console.log(result);
+    await updateMovieTable();
+    document.getElementById('addMovieForm').style.display = 'none'; 
+    document.getElementById('addMovieButton').style.display = 'block'; 
+  } catch (error) {
+    console.error(error);
+  }
+});
+updateMovieTable();
+  </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Login & Registration </title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+  
+  const eyeIconSignup = document.getElementById('togglePasswordSignup');
+  const eyeIconLogin = document.getElementById('togglePasswordLogin');
+  const passwordFieldSignup = document.getElementById('signupPassword');
+  const passwordFieldLogin = document.getElementById('loginPassword');
+
+  eyeIconSignup.addEventListener('click', () => {
+    if (passwordFieldSignup.type === 'text') {
+      passwordFieldSignup.type = 'password';
+      eyeIconSignup.querySelector('img').src = 'eye-iconclosed.png'; 
+    } else {
+      passwordFieldSignup.type = 'text';
+      eyeIconSignup.querySelector('img').src = 'eye-icon.png'; 
+    }
+  });
+
+  eyeIconLogin.addEventListener('click', () => {
+    if (passwordFieldLogin.type === 'text') {
+      passwordFieldLogin.type = 'password';
+      eyeIconLogin.querySelector('img').src = 'eye-iconclosed.png'; 
+    } else {
+      passwordFieldLogin.type = 'text';
+      eyeIconLogin.querySelector('img').src = 'eye-icon.png'; 
+    }
+  });
+      const signupForm = document.getElementById('signupForm');
+      const signupButton = document.getElementById('signupButton');
+  
+      signupButton.addEventListener('click', async (event) => {
+        event.preventDefault();
+  
+        const signupEmail = document.getElementById('signupEmail').value;
+        const signupPassword = document.getElementById('signupPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isValidEmail = emailRegex.test(signupEmail);
+
+    if (!isValidEmail) {
+      alert('Invalid email format. Please provide a valid email address.');
+      return;
+    }
+  
+        if (signupPassword !== confirmPassword) {
+          alert("Passwords don't match");
+          return;
+        }
+  
+        const userData = {
+          email: signupEmail,
+          password: signupPassword,
+        };
+  
+        try {
+          const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+          });
+  
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+  
+          const result = await response.text();
+          alert('Signup successful. Redirecting to Login');
+          window.location.href = '/Login+signup.html';
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Signup failed. Please try again.');
+        }
+      });
+  
+      const loginForm = document.getElementById('loginForm');
+      const loginButton = document.getElementById('loginButton');
+
+      loginButton.addEventListener('click', async (event) => {
+        event.preventDefault();
+  
+        const loginEmail = document.getElementById('loginEmail').value;
+        const loginPassword = document.getElementById('loginPassword').value;
+  
+        const userData = {
+          email: loginEmail,
+          password: loginPassword,
+        };
+  
+        try {
+          const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+          });
+  
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+  
+          const result = await response.text();
+          if (result === 'Login successful') {
+            alert('Login successful');
+            window.location.href = 'http://localhost:8080';
+          } else {
+            alert('Invalid email or password. Please try again.');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Failed to login. Please try again.');
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div id="loginPage" class="container">
+    <div class="container">
+      <input type="checkbox" id="check">
+      <div class="login form">
+        <header>Login</header>
+        <form id="loginForm">
+          <input type="text" id="loginEmail" placeholder="Enter your email">
+          <div class="password-container" style="position: relative">
+            <input type="password" id="loginPassword" placeholder="Enter your password">
+            <span class="eye-icon" id="togglePasswordLogin">
+              <img src="eye-iconclosed.png" id="eyeIcon" style="width: 40px; height: 40px;position: baseline;position: absolute; top:35%; right: 10px; transform: translateY(-50%); cursor: pointer;">
+            </span>
+          </div>
+          <a href="#">Forgot password?</a>
+          <input type="button" id="loginButton" class="button" value="Login">
+        </form>
+        <div class="signup">
+          <span class="signup">Don't have an account?
+            <label for="check">Signup</label>
+          </span>
+        </div>
+      </div>
+      <div class="registration form">
+        <header>Signup</header>
+        <form id="signupForm">
+          <input type="text" id="signupEmail" placeholder="Enter your email">
+          <div class="password-container" style="position: relative">
+            <input type="password" id="signupPassword" placeholder="Create a password">
+            <span class="eye-icon" id="togglePasswordSignup">
+              <img src="eye-iconclosed.png" id="eyeIcon" style="width: 40px; height: 40px;position: baseline;position: absolute; top:35%; right: 10px; transform: translateY(-50%); cursor: pointer;">
+            </span>
+          </div>
+          <input type="password" id="confirmPassword" placeholder="Confirm your password">
+          <input type="button" id="signupButton" class="button" value="Signup">
+        </form>
+        <div class="signup">
+          <span class="signup">Already have an account?
+            <label for="check">Login</label>
+          </span>
+        </div>
+      </div>
+  
+  <div id="moviesPage" class="container" style="display: none;">
+    <h1>Movies Database</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Tên </th>
+        <th>Năm </th>
+        <th>Mô tả </th>
+        <th>Thao tác </th>
+      </tr>
+    </thead>
+    <tbody id="moviesTableBody"></tbody>
+  </table>
+
+  <form id="addMovieForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name"><br><br>
+    <label for="year">Year:</label>
+    <input type="number" id="year" name="year"><br><br>
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description" rows="4" cols="50"></textarea><br><br>
+    <button type="submit">Add Movie</button>
+  </form>
+  </div>
+  
+</body>
+</html>
